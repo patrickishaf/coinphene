@@ -1,0 +1,8 @@
+Q_MANAGE_ASSETS = "query:manage_assets"
+Q_MANAGE_SOL_ASSET = "query:manage_sol_asset:sell_x_percent"
+Q_BUY_WITH_X_SOL = "query:manage_assets.buy_with_x_sol"
+Q_GO_BACK = "query:exit"
+Q_SELL_100_PERCENT = "query:manage_assets.sell_all"
+Q_SELL_X_PERCENT = "query:manage_asset_sell_x_percent"
+Q_REFRESH = "query:manage_assets.refresh"
+Q_VIEW_TOKEN_CHART = "query:manage_assets.view_token_chart"

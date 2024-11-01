@@ -1,0 +1,7 @@
+BUY_RESPONSE = "Buy Token:\n\nTo buy a token, reply to the next message with the symbol or contract address of the token you want to buy"
+ENTER_TOKEN_ADDRESS_TO_BUY = "Enter token address you want to buy"
+ENTER_AMOUNT_OF_SOL_TO_SPEND = "Enter amount of SOL to spend"
+ENTER_AMOUNT_OF_SOL_TO_WITHDRAW = "Enter amount of SOL to withdraw"
+ENTER_AMOUNT_OF_SOL_TO_WITHDRAW = "Enter the amount of SOL to withdraw"
+ENTER_ADDRESS_TO_WITHDRAW_TO = "Enter address to withdraw your SOL to"
+ZERO_BALANCE_MESSAGE = "You don't have any SOL to buy tokens with\n\nTo buy a token, please top up your wallet with SOL\n\nADDRESS👇"

@@ -1,0 +1,6 @@
+ENTER_TOKEN_SYMBOL = "Enter token address or symbol"
+SOMETHING_WENT_WRONG = "Something went wrong. Please try again"
+TRANSACTION_FAILED = "Transaction failed. Make sure you have enough SOL to pay for the transaction fee"
+TRANSACTION_SENT = "Transaction sent. make sure you have enough SOL to pay for the transaction fee"
+INSUFFICENT_SOL_BALANCE = "Insufficient SOL balance"
+INSUFFICIENT_BALANCE = "Insufficient balance"

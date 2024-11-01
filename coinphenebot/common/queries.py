@@ -1,0 +1,1 @@
+Q_GO_BACK = "query:exit"
