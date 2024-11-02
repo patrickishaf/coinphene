@@ -8,12 +8,11 @@ export async function registerReqHandlers(app: Application) {
   app.use(express.urlencoded({ extended: true }))
   app.use(cors({origin: true}))
   app.use('*', ensureUserIsAuthenticated)
-  // TODO: Register auth middleware. only the a request carrying a particular token should go through the middleware
 
   app.post("/keypair/sol", generateSolKeypair)
   app.post("/swap", triggerSwap)
   // app.get("/tokeninfo", getTokenInformation)
-  // app.get("/balances", fetchWalletBalance)
+  app.get("/balances/:pubkey", fetchWalletBalance)
   app.post("/send-sol", triggerSend)
   // app.post("/deduct", deductCharges)
 }

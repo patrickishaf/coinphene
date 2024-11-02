@@ -1,6 +1,6 @@
 import Joi from 'joi'
 import { Request, Response } from 'express'
-import { apiSwap, fetchTokenAccounts, generateSolWallet, getTokenData, sendSOL, SendSolParams, SwapParams } from '../lib'
+import { apiSwap, fetchTokenBalances, fetchTokenBalancesDetailed, generateSolWallet, getTokenData, sendSOL, SendSolParams, SwapParams } from '../lib'
 import { validateSchema } from '../utils/validateschema'
 import { HttpStatusCode } from 'axios'
 import { Keypair, PublicKey } from '@solana/web3.js'
@@ -136,17 +136,29 @@ export async function triggerSend(req: Request, res: Response) {
 
 export async function fetchWalletBalance(req: Request, res: Response) {
   try {
-    const schema = Joi.object({
-      pub_key: Joi.string().required(),
-    });
-    const err = await validateSchema(schema, req.query)
-    if (err) {
-      return res.status(HttpStatusCode.BadRequest).json(err)
+    const querySchema = Joi.object({
+      detailed: Joi.boolean().optional(),
+    })
+    const paramSchema = Joi.object({
+      pubkey: Joi.string().required(),
+    })
+    const queryError = await validateSchema(querySchema, req.query)
+    const paramsError = await validateSchema(paramSchema, req.params)
+    if (queryError || paramsError) {
+      return res.status(HttpStatusCode.BadRequest).json(queryError || paramsError)
     }
 
-    const {pub_key} = req.query
-    const publicKey = new PublicKey(pub_key!.toString())
-    const balances = await fetchTokenAccounts(publicKey)
+    const {pubkey} = req.params
+    const before = (new Date()).getTime()
+    let balances
+    if (req.query.detailed) {
+      balances = await fetchTokenBalancesDetailed(pubkey!.toString())
+    } else {
+      balances = await fetchTokenBalances(pubkey!.toString())
+    }
+    const after = (new Date()).getTime()
+    const duration = after - before
+    console.log({ duration })
     console.log(balances)
 
     return res.status(HttpStatusCode.Ok).json(balances)
