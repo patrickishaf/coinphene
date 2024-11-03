@@ -78,11 +78,6 @@ async def handle_manage_assets(query: CallbackQuery):
     await manageassets.callback_manage_assets(bot, query)
 
 
-# @bot.callback_query_handler(func=lambda x: x.json["data"] == manageassets.Q_BUY_WITH_X_SOL)
-# async def handle_buy_with_x_sol(query: CallbackQuery):
-#     await manageassets.callback_buy_with_x_sol(bot, query)
-
-
 @bot.callback_query_handler(func=lambda x: x.json["data"] == manageassets.Q_SELL_100_PERCENT)
 async def handle_sell_100_percent(query: CallbackQuery):
     await manageassets.callback_sell_100_percent(bot, query)
@@ -114,12 +109,12 @@ async def handle_settings(query: CallbackQuery):
 
 
 @bot.callback_query_handler(func=lambda x: x.json["data"] == wallet.Q_BUY_WITH_1_SOL)
-async def handle_view_token_chart(query: CallbackQuery):
+async def handle_buy_with_1_sol(query: CallbackQuery):
     await wallet.callback_buy_with_1_sol(bot, query)
 
 
 @bot.callback_query_handler(func=lambda x: x.json["data"] == wallet.Q_BUY_WITH_2_SOL)
-async def handle_buy_with_x_sol(query: CallbackQuery):
+async def handle_buy_with_2_sol(query: CallbackQuery):
     await wallet.callback_buy_with_2_sol(bot, query)
 
 
@@ -129,30 +124,30 @@ async def handle_buy_with_x_sol(query: CallbackQuery):
 
 
 @bot.callback_query_handler(func=lambda x: x.json["data"] == wallet.Q_CONFIRM_EXPORT_PRIVATE_KEY)
-async def handle_buy_with_x_sol(query: CallbackQuery):
+async def handle_confirm_export_private_key(query: CallbackQuery):
     await wallet.callback_confirm_export_pk(bot, query)
 
 
 @bot.callback_query_handler(func=lambda x: x.json["data"] == wallet.Q_DEPOSIT_SOL)
-async def handle_buy_with_x_sol(query: CallbackQuery):
+async def handle_deposit_sol(query: CallbackQuery):
     await wallet.callback_deposit_sol(bot, query)
 
 
 @bot.callback_query_handler(func=lambda x: x.json["data"] == wallet.Q_EXPORT_PRIVATE_KEY)
-async def handle_buy_with_x_sol(query: CallbackQuery):
+async def handle_export_private_key(query: CallbackQuery):
     await wallet.callback_export_private_key(bot, query)
 
 
 @bot.callback_query_handler(func=lambda x: x.json["data"] == wallet.Q_REFRESH_BUY)
-async def handle_buy_with_x_sol(query: CallbackQuery):
+async def handle_refresh_buy(query: CallbackQuery):
     await wallet.callback_refresh_buy(bot, query)
 
 
 @bot.callback_query_handler(func=lambda x: x.json["data"] == wallet.Q_WALLET)
-async def handle_buy_with_x_sol(query: CallbackQuery):
+async def handle_wallet(query: CallbackQuery):
     await wallet.callback_wallet(bot, query)
 
 
 @bot.callback_query_handler(func=lambda x: x.json["data"] == wallet.Q_WITHDRAW_X_SOL)
-async def handle_buy_with_x_sol(query: CallbackQuery):
+async def handle_withdraw_x_sol(query: CallbackQuery):
     await wallet.callback_withdraw_x_sol(bot, query)

@@ -7,6 +7,8 @@ from db import Wallet
 import bot.queries as queries
 import manageassets as manageassets
 import wallet.queries as walletqueries
+from tokeninfo import tokeninfoservice
+from db import SplToken
 
 
 async def callback_buy(bot: AsyncTeleBot, query: CallbackQuery):
@@ -26,15 +28,6 @@ async def callback_buy(bot: AsyncTeleBot, query: CallbackQuery):
                 user_telegram_id=query.from_user.id,
             ))
             user_wallet = new_wallet
-
-        tokens = walletservice.get_tokens_in_wallet(user_wallet.public_key)
-
-        iterator = filter(lambda t: t["symbol"] == "SOL", tokens["tokens"])
-        matching_tokens = [x for x in iterator]
-
-        if len(matching_tokens) == 0 or matching_tokens[0]["totalUiAmount"] == 0:
-            await bot.send_message(chat_id, replies.ZERO_BALANCE_MESSAGE)
-            return await bot.send_message(chat_id, f"`{user_wallet.public_key}`")
         
         await bot.send_message(chat_id, replies.BUY_RESPONSE)
         await bot.send_message(chat_id, replies.ENTER_TOKEN_ADDRESS_OR_PUMP_FUN_LINK_TO_BUY, reply_markup=ForceReply(input_field_placeholder="4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R"))
@@ -86,37 +79,34 @@ async def callback_sell(bot: AsyncTeleBot, query: CallbackQuery):
         existing_wallet = walletservice.get_wallet_by_telegram_id(user_telegram_id)
         if existing_wallet is None:
             return await bot.send_message(chat_id, "you don't have a wallet yet. Tap the button below to create one", reply_markup=quick_markup({
-                'Create Wallet': { 'callback_data': walletqueries.Q_CREATE_WALLET},
+                'Create Wallet': {'callback_data': walletqueries.Q_CREATE_WALLET},
             }, row_width=1))
 
         else:
             transactionservice.update_pending_txn_type('SELL', user_id=query.from_user.id)
-            # get the wallet balance of the user
-            tokens = walletservice.get_tokens_in_wallet(existing_wallet.public_key)
-            if len(tokens["tokens"]) == 0:
-                return await bot.send_message(chat_id, "you do not have any tokens in your wallet")
-            elif len(tokens["tokens"]) == 1:
-                if tokens["tokens"][0]["symbol"] == "SOL":
-                    sol_balance = tokens["tokens"][0]["accounts"][0]["uiAmount"]
-                    return await bot.send_message(chat_id, f"Balances:\n\nSOL: {sol_balance}\n\nYou do not have any tokens to sell. Click on the button below to buy", reply_markup=quick_markup({
-                            'Buy': {'callback_data': queries.Q_BUY},
-                        }, row_width=1))
-
-            user_balances = [{
-                    "name": token["name"],
-                    "symbol": token["symbol"],
-                    "amount": token["totalUiAmount"],
-                    "address": token["mint"],
-                    "price": token["price"] if "price" in token else None
-                } for token in tokens["tokens"]]
+            data = walletservice.get_wallet_balance(existing_wallet.public_key, detailed=True)
+            if len(data["token_balances"]) == 0:
+                return await bot.send_message(chat_id, "you do not have enough token balances to sell")
+            addresses = [item["mint"] for item in data["token_balances"]]
+            multi_token_info = tokeninfoservice.get_multi_token_info(",".join(addresses))
 
             response = "Token balances:\n"
-            for bal in user_balances:
-                name = bal["name"]
-                symbol = bal["symbol"]
-                amount = bal["amount"]
-                address = bal["address"]
-                response += f"\n*{name}*: {amount} {symbol}\n*Address*: `{address}`\n(👆tap to copy)\n\n"
+            current_index = 0
+            for info in multi_token_info["data"]:
+                name = info["attributes"]["name"]
+                symbol = info["attributes"]["symbol"]
+                amount = data["token_balances"][current_index]["balance"]
+                address = info["attributes"]["address"]
+                response += f"\n*{name}*: {amount:.10f} {symbol}\n*Address*: `{address}`\n(👆tap to copy)\n\n"
+
+                # cache the spl token for faster lookup in case of next time
+                cached_token = SplToken(
+                    address=address,
+                    name=name,
+                    symbol=symbol
+                )
+                tokeninfoservice.create_spl_token(cached_token)
+                current_index += 1
             response += "👇"
             
             await bot.send_message(chat_id, response)

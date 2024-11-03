@@ -1,6 +1,6 @@
 import Joi from 'joi'
 import { Request, Response } from 'express'
-import { apiSwap, fetchTokenBalances, fetchTokenBalancesDetailed, generateSolWallet, getTokenData, sendSOL, SendSolParams, SwapParams } from '../lib'
+import { apiSwap, fetchSolBalance, fetchTokenBalances, fetchTokenBalancesDetailed, generateSolWallet, getTokenData, sendSOL, SendSolParams, SwapParams } from '../lib'
 import { validateSchema } from '../utils/validateschema'
 import { HttpStatusCode } from 'axios'
 import { Keypair, PublicKey } from '@solana/web3.js'
@@ -134,7 +134,7 @@ export async function triggerSend(req: Request, res: Response) {
   }
 }
 
-export async function fetchWalletBalance(req: Request, res: Response) {
+export async function getWalletBalance(req: Request, res: Response) {
   try {
     const querySchema = Joi.object({
       detailed: Joi.boolean().optional(),
@@ -149,22 +149,39 @@ export async function fetchWalletBalance(req: Request, res: Response) {
     }
 
     const {pubkey} = req.params
-    const before = (new Date()).getTime()
     let balances
     if (req.query.detailed) {
       balances = await fetchTokenBalancesDetailed(pubkey!.toString())
     } else {
       balances = await fetchTokenBalances(pubkey!.toString())
     }
-    const after = (new Date()).getTime()
-    const duration = after - before
-    console.log({ duration })
     console.log(balances)
 
     return res.status(HttpStatusCode.Ok).json(balances)
   } catch (err: any) {
     console.log('failed to fetch wallet balance', err.message)
     return res.status(HttpStatusCode.InternalServerError).json('failed to fetch wallet balance')
+  }
+}
+
+export async function getSolBalance(req: Request, res: Response) {
+  try {
+    const schema = Joi.object({
+      pubkey: Joi.string().required(),
+    })
+    const error = await validateSchema(schema, req.params)
+    if (error) {
+      return res.status(HttpStatusCode.BadRequest).json(error)
+    }
+
+    const {pubkey} = req.params
+    const solBalance = await fetchSolBalance(pubkey)
+    console.log(solBalance)
+
+    return res.status(HttpStatusCode.Ok).json(solBalance)
+  } catch (err: any) {
+    console.log('failed to fetch sol balance', err.message)
+    return res.status(HttpStatusCode.InternalServerError).json('failed to fetch SOL balance')
   }
 }
 

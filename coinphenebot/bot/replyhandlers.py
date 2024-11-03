@@ -4,7 +4,7 @@ from telebot.util import quick_markup
 from bot import replies, queries
 from tokeninfo import get_token_info, get_token_from_address_cached
 import wallet as walletmodule
-import config
+from common import replies as commonreplies
 
 
 async def handle_enter_token_address_or_pump_fun_link_to_buy(bot: AsyncTeleBot, message: Message):
@@ -35,19 +35,9 @@ async def handle_enter_token_address_or_pump_fun_link_to_buy(bot: AsyncTeleBot, 
         # 👆 this is a temporary fix
 
 
-        walletmodule.update_pending_txn_input_mint(message.text, user_id=message.from_user.id)
+        walletmodule.update_pending_txn_input_mint(token_address, user_id=message.from_user.id)
         walletmodule.update_pending_txn_input_symbol(token_symbol, user_id=message.from_user.id)
 
-        # wallet = walletmodule.get_wallet_by_telegram_id(message.from_user.id)
-        # balances = walletmodule.get_tokens_in_wallet(wallet.public_key)
-        # iterator = filter(lambda t: t["symbol"] == "SOL", balances["tokens"])
-        # matching_tokens = [x for x in iterator]
-
-        # if len(matching_tokens) == 0 or matching_tokens[0]["totalUiAmount"] == 0:
-        #     await bot.send_message(chat_id, replies.ZERO_BALANCE_MESSAGE)
-        #     return await bot.send_message(chat_id, f"`{wallet.public_key}`")
-        
-        # sol_balance = matching_tokens[0]["totalUiAmount"]
         result = (f"*{token_name}* | *{token_symbol}*\n\n{token_address}\n\n*Price*: USD {token_price_usd}\n*24h Volume*: USD {volume_24h}\n"
                 f"*Market Cap*: USD {market_cap_usd}\n\nTo buy press one of the buttons")
         # Prompt user to to enter the amount to buy
@@ -64,13 +54,16 @@ async def handle_enter_token_address_or_pump_fun_link_to_buy(bot: AsyncTeleBot, 
 
 
 async def handle_enter_token_address_to_sell(bot: AsyncTeleBot, message: Message):
-    chat_id = message.chat.id
-    walletmodule.update_pending_txn_output_mint(message.text, message.from_user.id)
-    token = get_token_from_address_cached(message.text)
-    if token is not None:
-        walletmodule.update_pending_txn_output_symbol(token.symbol, message.from_user.id)
+    try:
+        chat_id = message.chat.id
+        walletmodule.update_pending_txn_output_mint(message.text, message.from_user.id)
+        token = get_token_from_address_cached(message.text)
+        if token is not None:
+            walletmodule.update_pending_txn_output_symbol(token.symbol, message.from_user.id)
 
-    await bot.send_message(chat_id, replies.ENTER_TOKEN_AMOUNT_TO_SELL, reply_markup=ForceReply(input_field_placeholder="0.1234"))
+        await bot.send_message(chat_id, replies.ENTER_TOKEN_AMOUNT_TO_SELL, reply_markup=ForceReply(input_field_placeholder="0.1234"))
+    except Exception as e:
+        await bot.send_message(chat_id, replies.SOMETHING_WENT_WRONG)
 
 
 async def handle_enter_token_amount_to_sell(bot: AsyncTeleBot, message: Message):
@@ -79,9 +72,18 @@ async def handle_enter_token_amount_to_sell(bot: AsyncTeleBot, message: Message)
         amount = eval(message.text)
         wallet = walletmodule.get_wallet_by_telegram_id(message.from_user.id)
         pending_txn = walletmodule.get_pending_txn_by_uid(message.from_user.id)
+
         """
         Ensure that the user has enough token to sell and to pay the transaction charges before sending the transaction request
         """
+        balances = walletmodule.get_wallet_balance(wallet.public_key)
+        if len(balances["token_balances"]) == 0:
+            return await bot.send_message(chat_id, f"You do not have enough *{pending_txn.output_symbol}* to sell")
+        
+        balance_for = [{item["mint"]: item["balance"]} for item in balances["token_balances"]]
+        if balance_for[pending_txn.output_mint] is None or balance_for[pending_txn.output_mint] < amount:
+            return await bot.send_message(chat_id, commonreplies.INSUFFICIENT_BALANCE)
+        
         txn = walletmodule.sell_token(owner_sk=wallet.private_key, amount=amount, token_address=pending_txn.output_mint)
         if txn is None:
             return await bot.send_message(chat_id, replies.TRANSACTION_FAILED)
@@ -89,11 +91,6 @@ async def handle_enter_token_amount_to_sell(bot: AsyncTeleBot, message: Message)
     except Exception as e:
         print(f"failed to sell token. error: {e}")
         await bot.send_message(chat_id, replies.SOMETHING_WENT_WRONG)
-
-
-async def handle_token_info_error(bot: AsyncTeleBot, message: Message):
-    chat_id = message.chat.id
-    pass
 
 
 async def handle_enter_token_symbol(bot: AsyncTeleBot, message: Message):

@@ -9,8 +9,8 @@ import wallet.pendingwithdrawalservice as withdrawalservice
 import wallet.replies as replies
 
 async def handle_enter_amount_of_sol_to_spend(bot: AsyncTeleBot, message: Message):
-    chat_id = message.chat.id
     try:
+        chat_id = message.chat.id
         amount = eval(message.text)
         wallet = walletservice.get_wallet_by_telegram_id(message.from_user.id)
         if wallet is None:
@@ -18,11 +18,9 @@ async def handle_enter_amount_of_sol_to_spend(bot: AsyncTeleBot, message: Messag
                 'Create Wallet': { 'callback_data': queries.Q_CREATE_WALLET},
             }, row_width=1))
         
-        data = walletservice.get_tokens_in_wallet(wallet.public_key)
-        iterator = filter(lambda x: x["symbol"] == "SOL", data["tokens"])
-        balances = [x for x in iterator]
+        data = walletservice.get_sol_balance(wallet.public_key)
         
-        if len(balances) == 0 or balances[0]["totalUiAmount"] <= 0:
+        if data["balance"] < amount:
             return await bot.send_message(chat_id, common.INSUFFICENT_SOL_BALANCE)
         
         pending_txn = transactionservice.get_pending_txn_by_uid(message.from_user.id)
@@ -61,9 +59,6 @@ async def handle_enter_amount_of_sol_to_withdraw(bot: AsyncTeleBot, message: Mes
 
 
 async def handle_enter_address_to_withdraw_to(bot: AsyncTeleBot, message: Message):
-    # response = (f"Transaction confirmed. \n\n[View on Solana Explorer](https://explorer.solana.com/tx/4qqjzKR1V1gPbthBdvrtRba7VAAWumcMcLcsRPH4My87MyMS36jQpTBGL3GAXuWuFmB5no6ai9EkTAPQSDMGiP7z)"
-    #             f"\n\n[View on Solscan](https://solscan.io/tx/4qqjzKR1V1gPbthBdvrtRba7VAAWumcMcLcsRPH4My87MyMS36jQpTBGL3GAXuWuFmB5no6ai9EkTAPQSDMGiP7z)")
-    # await bot.send_message(message.chat.id, response)
     try:
         chat_id = message.chat.id
         await bot.send_chat_action(chat_id, 'typing')

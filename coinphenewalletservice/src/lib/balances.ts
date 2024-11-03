@@ -87,3 +87,12 @@ export const fetchTokenBalancesDetailed = async (wallet: string): Promise<TokenA
   })
   return { native_balance, token_balances }
 }
+
+export const fetchSolBalance = async (mint: string): Promise<TokenBalance> => {
+  const publicKey = new PublicKey(mint)
+  const nativeLamports = await connection.getBalance(publicKey)
+  return {
+    mint: NATIVE_MINT.toString(),
+    balance: nativeLamports / LAMPORTS_PER_SOL,
+  }
+}

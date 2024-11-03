@@ -25,6 +25,19 @@ def get_token_info(token_address):
 #     except Exception as e:
 #         print(f"failed to get additional data. error: {e}")
 #         return None
+
+def get_multi_token_info(token_addresses: str):
+    """
+    token_addresses is a comma-separated string
+    """
+    try:
+        res = http_session.get(f"{base_url}/networks/solana/tokens/multi/{token_addresses}")
+        res.raise_for_status()
+        data = res.json()
+        return data
+    except Exception as e:
+        print(f"failed to get token info. error: {e}")
+        return None
     
 
 def get_token_from_symbol_cached(symbol: str):

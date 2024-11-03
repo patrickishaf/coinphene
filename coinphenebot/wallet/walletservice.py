@@ -38,9 +38,20 @@ def save_wallet_to_user(wallet: Wallet):
         print(f"failed to insert wallet into db. error: {e}")
 
 
-def get_wallet_balance(address: str):
+def get_wallet_balance(address: str, detailed = False):
     try:
-        res = http_session.request(method="GET", url=f"{wallet_service_url}/balances", params={"pub_key": address})
+        res = http_session.request(method="GET", url=f"{wallet_service_url}/balances/{address}?detailed={detailed}")
+        res.raise_for_status()
+        data = res.json()
+        return data
+    except Exception as e:
+        print(f"failed to get wallet balance. error: {e}")
+        return None
+
+
+def get_sol_balance(address: str):
+    try:
+        res = http_session.request(method="GET", url=f"{wallet_service_url}/sol-balance/{address}")
         res.raise_for_status()
         data = res.json()
         return data

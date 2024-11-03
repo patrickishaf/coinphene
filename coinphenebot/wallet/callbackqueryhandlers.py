@@ -6,25 +6,25 @@ import common
 from db import Wallet
 import base58
 
+NO_WALLET_REPLY = "you don't have a wallet yet. Tap the button below to create one"
+
 async def callback_buy_with_1_sol(bot: AsyncTeleBot, query: CallbackQuery):
-    chat_id = query.chat.id
     try:
+        chat_id = query.message.chat.id
         amount = 1
-        wallet = walletservice.get_wallet_by_telegram_id(query.message.from_user.id)
+        wallet = walletservice.get_wallet_by_telegram_id(query.from_user.id)
         if wallet is None:
-            return await bot.send_message(chat_id, "you don't have a wallet yet. Tap the button below to create one", reply_markup=quick_markup({
+            return await bot.send_message(chat_id, NO_WALLET_REPLY, reply_markup=quick_markup({
                 'Create Wallet': { 'callback_data': queries.Q_CREATE_WALLET},
             }, row_width=1))
         
-        data = walletservice.get_tokens_in_wallet(wallet.public_key)
-        iterator = filter(lambda x: x["symbol"] == "SOL", data["tokens"])
-        balances = [x for x in iterator]
+        data = walletservice.get_sol_balance(wallet.public_key)
         
-        if len(balances) == 0 or balances[0]["totalUiAmount"] <= 0:
+        if data["balance"] < amount:
             return await bot.send_message(chat_id, common.INSUFFICENT_SOL_BALANCE)
         
-        pending_txn = transactionservice.get_pending_txn_by_uid(query.message.from_user.id)
-        txn = walletservice.sell_token(wallet.private_key, amount, pending_txn.input_mint)
+        pending_txn = transactionservice.get_pending_txn_by_uid(query.from_user.id)
+        txn = walletservice.buy_token(wallet.private_key, amount, pending_txn.input_mint)
         if txn is None:
             return await bot.send_message(chat_id, common.TRANSACTION_FAILED)
         
@@ -34,24 +34,22 @@ async def callback_buy_with_1_sol(bot: AsyncTeleBot, query: CallbackQuery):
 
 
 async def callback_buy_with_2_sol(bot: AsyncTeleBot, query: CallbackQuery):
-    chat_id = query.chat.id
     try:
+        chat_id = query.message.chat.id
         amount = 2
-        wallet = walletservice.get_wallet_by_telegram_id(query.message.from_user.id)
+        wallet = walletservice.get_wallet_by_telegram_id(query.from_user.id)
         if wallet is None:
-            return await bot.send_message(chat_id, "you don't have a wallet yet. Tap the button below to create one", reply_markup=quick_markup({
+            return await bot.send_message(chat_id, NO_WALLET_REPLY, reply_markup=quick_markup({
                 'Create Wallet': { 'callback_data': queries.Q_CREATE_WALLET},
             }, row_width=1))
         
-        data = walletservice.get_tokens_in_wallet(wallet.public_key)
-        iterator = filter(lambda x: x["symbol"] == "SOL", data["tokens"])
-        balances = [x for x in iterator]
+        data = walletservice.get_sol_balance(wallet.public_key)
         
-        if len(balances) == 0 or balances[0]["totalUiAmount"] <= 0:
+        if data["balance"] < amount:
             return await bot.send_message(chat_id, common.INSUFFICENT_SOL_BALANCE)
         
-        pending_txn = transactionservice.get_pending_txn_by_uid(query.message.from_user.id)
-        txn = walletservice.sell_token(wallet.private_key, amount, pending_txn.input_mint)
+        pending_txn = transactionservice.get_pending_txn_by_uid(query.from_user.id)
+        txn = walletservice.buy_token(wallet.private_key, amount, pending_txn.input_mint)
         if txn is None:
             return await bot.send_message(chat_id, common.TRANSACTION_FAILED)
         

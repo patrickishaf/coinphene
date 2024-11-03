@@ -8,7 +8,6 @@ import manageassets
 import referral as referral
 from settings import userservice
 import common
-import logging
 
 
 async def handle_assets(bot: AsyncTeleBot, message: Message):
@@ -55,8 +54,9 @@ async def handle_start(bot: AsyncTeleBot, message: Message):
             '❌ Back': {'callback_data': queries.Q_GO_BACK}
         }, row_width=2))
     else:
-        balances = walletmodule.get_tokens_in_wallet(wallet.public_key)
-        sol_balance = common.parse_sol_balance(balances)
+        data = walletmodule.get_sol_balance(wallet.public_key)
+        # balances = walletmodule.get_tokens_in_wallet(wallet.public_key)
+        sol_balance = data["balance"]
         reply = replies.get_return_message(wallet.public_key, sol_balance)
         await bot.send_message(message.chat.id, text=reply, reply_markup=quick_markup({
             '💸 Buy': {'callback_data': queries.Q_BUY},
