@@ -5,6 +5,8 @@ from wallet import replies, queries, walletservice, transactionservice, pendingw
 import common
 from db import Wallet
 import base58
+from tokeninfo import tokeninfoservice
+import config
 
 NO_WALLET_REPLY = "you don't have a wallet yet. Tap the button below to create one"
 
@@ -30,6 +32,7 @@ async def callback_buy_with_1_sol(bot: AsyncTeleBot, query: CallbackQuery):
         
         await bot.send_message(chat_id, common.TRANSACTION_SENT)
     except Exception as e:
+        print(f"failed to process buy with 1 SOL. error: {e}")
         await bot.send_message(chat_id, common.TRANSACTION_FAILED)
 
 
@@ -55,10 +58,12 @@ async def callback_buy_with_2_sol(bot: AsyncTeleBot, query: CallbackQuery):
         
         await bot.send_message(chat_id, common.TRANSACTION_SENT)
     except Exception as e:
+        print(f"failed to process buy with 2 SOL. error: {e}")
         await bot.send_message(chat_id, common.TRANSACTION_FAILED)
 
 
 async def callback_buy_with_x_sol(bot: AsyncTeleBot, query: CallbackQuery):
+    transactionservice.update_pending_txn_output_mint(config.native_mint, query.from_user.id)
     await bot.send_message(query.message.chat.id, replies.ENTER_AMOUNT_OF_SOL_TO_SPEND, reply_markup=ForceReply(input_field_placeholder="0.01234"))
 
 
@@ -74,7 +79,7 @@ async def callback_confirm_export_pk(bot: AsyncTeleBot, query: CallbackQuery):
         }, row_width=1))
         
     except Exception as e:
-        print("failed to process cofirm export private key. error: {e}")
+        print(f"failed to process confirm export private key. error: {e}")
         await bot.send_message(chat_id, common.SOMETHING_WENT_WRONG)
 
 
@@ -160,27 +165,19 @@ async def callback_wallet(bot: AsyncTeleBot, query: CallbackQuery):
                 'Create Wallet': {'callback_data': queries.Q_CREATE_WALLET}
             }, row_width=1))
         
-        data = walletservice.get_tokens_in_wallet(wallet.public_key)
-        iterator = filter(lambda x: x["symbol"] == "SOL", data["tokens"])
-        balances = [x for x in iterator]
-        sol_balance = 0
-        usd_balance = 0
-        if (len(balances) == 0):
-            sol_balance = 0
-            usd_balance = 0
-        else:
-            sol_balance = balances[0]["totalUiAmount"]
-            if not sol_balance == 0:
-                price = balances[0]["price"]["usdPrice"] if "price" in balances[0] else 0
-                usd_balance = sol_balance * price
+        data = walletservice.get_sol_balance(wallet.public_key)
+        sol_balance = data["balance"]
         
-        message = f"Wallet\n\n*Address*: `{wallet.public_key}`\n(tap to copy)\n\n*Balance (SOL)*: {sol_balance} SOL\n*Balance (USD)*: {usd_balance} USD"
+        token_info = tokeninfoservice.get_token_info(data["mint"])
+        usd_balance = eval(token_info["data"]["attributes"]["price_usd"]) * sol_balance
+        
+        message = f"Wallet\n\n*Address*: `{wallet.public_key}`\n(👆tap to copy)\n\n*Balance (SOL)*: {format(sol_balance, '.6f')} SOL\n*Balance (USD)*: {format(usd_balance, '.2f')} USD"
         await bot.send_message(chat_id, message, reply_markup=quick_markup({
             '⬆️ Withdraw x SOL': {'callback_data': queries.Q_WITHDRAW_X_SOL},
             '⬇️ Deposit SOL': {'callback_data': queries.Q_DEPOSIT_SOL},
-            '🔃 Reset Wallet': {'callback_data': queries.Q_RESET_WALLET},
+            '♻️ Reset Wallet': {'callback_data': queries.Q_RESET_WALLET},
             '🔑 Export Private Key': {'callback_data': queries.Q_EXPORT_PRIVATE_KEY},
-            '♻️ Refresh': {'callback_data': queries.Q_WALLET},
+            '🔃 Refresh': {'callback_data': queries.Q_WALLET},
             '❌ Close': {'callback_data': common.Q_GO_BACK},
         }))
     except Exception as e:

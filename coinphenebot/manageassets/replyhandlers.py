@@ -1,7 +1,8 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message, ForceReply
+from telebot.util import quick_markup
 from manageassets import manageassetservice, replies
-from wallet import walletservice
+from wallet import walletservice, transactionservice, queries as walletqueries
 import common.replies as commonreplies
 import config
 
@@ -9,10 +10,21 @@ import config
 async def enter_amount_of_token(bot: AsyncTeleBot, reply: Message):
     chat_id = reply.chat.id
     try:
+        existing_wallet = walletservice.get_wallet_by_telegram_id(reply.from_user.id)
+        if existing_wallet is None:
+            return await bot.send_message(chat_id, "you don't have a wallet yet. Tap the button below to create one", reply_markup=quick_markup({
+                'Create Wallet': {'callback_data': walletqueries.Q_CREATE_WALLET},
+            }, row_width=1))
+        
         amount = eval(reply.text)
-        manageassetservice.update_managed_asset_amount(amount)
+        data = walletservice.get_sol_balance(existing_wallet.public_key)
+        sol_balance = data["balance"]
+        if sol_balance is None or sol_balance < amount:
+            return await bot.send_message(chat_id, commonreplies.INSUFFICENT_SOL_BALANCE)
+        
+        manageassetservice.update_managed_asset_amount(amount, reply.from_user.id)
         managed_asset = manageassetservice.get_managed_asset_by_uid(reply.from_user.id)
-        txn = walletservice.buy_token(amount, managed_asset.ticker)
+        txn = walletservice.buy_token(existing_wallet.private_key, amount, managed_asset.ticker)
         if txn is None:
             return await bot.send_message(chat_id, commonreplies.TRANSACTION_FAILED)
         return await bot.send_message(chat_id, commonreplies.TRANSACTION_SENT)
@@ -26,6 +38,7 @@ async def enter_asset_to_buy_with_x_sol(bot: AsyncTeleBot, reply: Message):
     chat_id = reply.chat.id
     try:
         manageassetservice.update_managed_asset_ticker(reply.text, reply.from_user.id)
+        transactionservice.update_pending_txn_amount(reply.text, reply.from_user.id)
         await bot.send_message(chat_id, replies.ENTER_AMOUNT_OF_SOL, reply_markup=ForceReply())
     except Exception as e:
         print(f"failed to resolve enter asset to buy with x sol. error: {e}")

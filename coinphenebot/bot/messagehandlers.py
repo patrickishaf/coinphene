@@ -55,7 +55,6 @@ async def handle_start(bot: AsyncTeleBot, message: Message):
         }, row_width=2))
     else:
         data = walletmodule.get_sol_balance(wallet.public_key)
-        # balances = walletmodule.get_tokens_in_wallet(wallet.public_key)
         sol_balance = data["balance"]
         reply = replies.get_return_message(wallet.public_key, sol_balance)
         await bot.send_message(message.chat.id, text=reply, reply_markup=quick_markup({

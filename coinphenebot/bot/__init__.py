@@ -73,6 +73,11 @@ async def handle_sell(query: CallbackQuery):
     await callbackqueryhandlers.callback_sell(bot, query)
 
 
+@bot.callback_query_handler(func=lambda x:x.json["data"] == manageassets.Q_MA_BUY_WITH_X_SOL)
+async def handle_ma_buy_with_x_sol(query: CallbackQuery):
+    await manageassets.callback_buy_with_x_sol(bot, query)
+
+
 @bot.callback_query_handler(func=lambda x: x.json["data"] == manageassets.Q_MANAGE_ASSETS)
 async def handle_manage_assets(query: CallbackQuery):
     await manageassets.callback_manage_assets(bot, query)

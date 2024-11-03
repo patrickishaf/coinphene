@@ -21,13 +21,13 @@ async def route_reply_to_handler(bot: AsyncTeleBot, message: Message):
         await handlers.handle_enter_token_amount_to_sell(bot, message)
     # Manage Assets Replies
     elif parent_message == manageassets.ENTER_AMOUNT_OF_SOL:
-        manageassets.enter_amount_of_token(bot, message)
+        await manageassets.enter_amount_of_token(bot, message)
     elif parent_message == manageassets.ENTER_ASSET_TO_BUY_WITH_X_SOL:
-        manageassets.enter_asset_to_buy_with_x_sol(bot, message)
+        await manageassets.enter_asset_to_buy_with_x_sol(bot, message)
     elif parent_message == manageassets.ENTER_ASSET_TO_SELL_100_PERCENT:
-        manageassets.enter_asset_to_sell_100_percent(bot, message)
+        await manageassets.enter_asset_to_sell_100_percent(bot, message)
     elif parent_message == manageassets.ENTER_ASSET_TO_SELL_X_PERCENT:
-        manageassets.enter_asset_to_sell_x_percent(bot, message)
+        await manageassets.enter_asset_to_sell_x_percent(bot, message)
     elif parent_message == manageassets.ENTER_PERCENTAGE_OF_TOKEN_TO_SELL:
         pass
     # Wallet replies
