@@ -128,3 +128,20 @@ def send_token(to_address: str, amount: float, secret_key: str):
         print(f"failed to sell token. error: {e}")
         return None
     
+
+def sell_off(owner_sk: str, amount: float, token_address: str):
+    try:
+        body = {
+                "owner_sk": owner_sk,
+                "amount": amount,
+                "input_mint": native_mint,
+                "output_mint": token_address
+            }
+        res = http_session.post(f"{wallet_service_url}/sell-off", data=body)
+        res.raise_for_status()
+        data = res.json()
+        return data
+    except Exception as e:
+        print(f"failed to sell token. error: {e}")
+        return None
+    

@@ -15,5 +15,6 @@ export async function registerReqHandlers(app: Application) {
   app.get("/balances/:pubkey", controller.getWalletBalance)
   app.get("/sol-balance/:pubkey", controller.getSolBalance)
   app.post("/send-sol", controller.triggerSend)
+  app.post("/sell-off", controller.sellOff)
   // app.post("/deduct", deductCharges)
 }

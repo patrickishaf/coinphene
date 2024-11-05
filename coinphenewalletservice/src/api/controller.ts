@@ -248,3 +248,17 @@ export async function deductCharges(req: Request, res: Response) {
     return res.status(HttpStatusCode.InternalServerError).json('failed to deduct charges from txn')
   }
 }
+
+export async function sellOff(req: Request, res: Response) {
+  try {
+    /**
+     * 1. deduct charges
+     * 2. get the remaining balance
+     * 3. swap the remaining
+     */
+    return res.status(HttpStatusCode.Ok).json('token sold off')
+  } catch (err: any) {
+    console.log('failed to sell off token. error:', err.message)
+    return res.status(HttpStatusCode.InternalServerError).json('failed to sell off token')
+  }
+}

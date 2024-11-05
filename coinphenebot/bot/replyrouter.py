@@ -29,7 +29,7 @@ async def route_reply_to_handler(bot: AsyncTeleBot, message: Message):
     elif parent_message == manageassets.ENTER_ASSET_TO_SELL_X_PERCENT:
         await manageassets.enter_asset_to_sell_x_percent(bot, message)
     elif parent_message == manageassets.ENTER_PERCENTAGE_OF_TOKEN_TO_SELL:
-        pass
+        await manageassets.enter_percentage_of_token_to_sell(bot, message)
     # Wallet replies
     elif parent_message == wallet.ENTER_ADDRESS_TO_WITHDRAW_TO:
         await wallet.handle_enter_address_to_withdraw_to(bot, message)

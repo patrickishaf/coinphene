@@ -93,7 +93,7 @@ async def callback_reset_wallet(bot: AsyncTeleBot, query: CallbackQuery):
 async def callback_deposit_sol(bot: AsyncTeleBot, query: CallbackQuery):
     try:
         wallet = walletservice.get_wallet_by_telegram_id(query.from_user.id)
-        await bot.send_message(query.message.chat.id, f"`{wallet.public_key}`\n👆tap to copy")
+        await bot.send_message(query.message.chat.id, f"Your Wallet Address:\n\n`{wallet.public_key}`\n👆tap to copy")
     except Exception as e:
         print(f"failed to process callback_deposit_sol. error: {e}")
         await bot.send_message(query.message.chat.id, common.SOMETHING_WENT_WRONG)
